@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>
+    <%= title %>
+  </title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js"></script>
+  <style>
+    .dot {
+      height: 25px;
+      width: 25px;
+      background-color: #bbb;
+      border-radius: 50%;
+      display: inline-block;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id='div-room' style="width: 30%; margin: auto;" class="jumbotron text-center">
+    <div class="form-group">
+      <label for="room">Nhập Phòng:</label>
+      <input type="text" class="form-control" placeholder="Room123 (viết liền, không dấu)" id="room">
+    </div>
+    <button id="button-room" class="btn btn-primary">Tiếp Tục</button>
+    <br>
+    <hr>
+    <div class="form-group">
+      <label for="room">Phòng Đang Chờ (Có thể vào chơi):</label>
+      <div id="phong-cho"></div>
+    </div>
+    <br>
+    <hr>
+    <div class="form-group">
+      <label for="room">Phòng Đang Chơi (Không thể vào chơi):</label>
+      <div id="phong-choi"></div>
+    </div>
+  </div>
+
+  <div id='div-username' style="width: 30%; margin: auto;" class="jumbotron text-center">
+    <div class="form-group">
+      <label for="name">Nhập Tên:</label>
+      <input type="text" class="form-control" placeholder="Nhat123 (viết liền, không dấu)" id="name">
+    </div>
+    <button id='button-username' class="btn btn-primary">Tiếp Tục</button>
+  </div>
+
+  <div id="content" class="row">
+    <div id="uservaphong" style="width: 25%; height:600px; background-color: rgb(238, 228, 228); overflow: auto;">
+      <h2 id="Phong"> </h2>
+      <ul id="ListUser"> </ul>
+    </div>
+    <div id="cauhoi" style="width: 50%; height: 600px; background-color: rgb(231, 243, 243);">
+      <button id="btn-start">Bắt Đầu</button>
+      <div class="card" id="card">
+        <div class="card-body">
+          <div id="card-title">Có 10 Câu Hỏi, Thời Gian Làm Là 60s, Nhấn Bắt Đầu để gửi câu hỏi đến tất cả những người
+            trong nhóm</div>
+          <div id="card-link"></div>
+        </div>
+      </div>
+      <div id="second"></div>
+    </div>
+    <div id="table-thongke" style="width: 50%;">
+      <div id="BangXepHang"></div>
+      <br>
+      <hr>
+      <table class="table table-striped text-center">
+        <thead>
+          <tr>
+            <th>Câu Thứ</th>
+            <th>Đề Bài</th>
+            <th>Đáp Án Đúng</th>
+            <th>Đáp Án Của Bạn</th>
+            <th>Thời Gian Làm</th>
+          </tr>
+        </thead>
+        <tbody id="table-cauhoi">
+
+        </tbody>
+      </table>
+      <br>
+      <div class="row text-center">
+        <h4 class="col col-lg-4" id="nametk"></h4>
+        <h4 class="col col-lg-4" id="thoigiantk">Tổng Thời Gian: 52 giây </h4>
+        <h4 class="col col-lg-4" id="diemtk">Tổng Điểm: 9 </h4>
+      </div>
+    </div>
+    <div id="table-thongke-chat" style="padding-left: 15px; width: 25%; height: 600px; background-color: #bbb;">
+      <div class="row" style="height: 200px;">
+        <h4 class="text-center" style="margin: auto;">Bảng Thành Tích</h4>
+        <br><br>
+        <div style=" overflow: auto; height: 165px; width: 96%;">
+          <ul id="ul-bangthanhtich" class="list-group list-group-flush">
+          </ul>
+        </div>
+
+      </div>
+      <hr>
+      <div class="row" style="height: 400px;">
+        <div style="height: 290px;overflow: auto; width: 96%;">
+          <ul class="list-group" id="list-chat">
+          </ul>
+        </div>
+        <div style=" margin-top: 0%; width: 96%;" class="text-center">
+          <input id="chat" type="text" style="width: 80%;">
+          <button id="sendchat" type="submit" onclick="sendchat()">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.1/socket.io.js"
+    integrity="sha512-9mpsATI0KClwt+xVZfbcf2lJ8IFBAwsubJ6mI3rtULwyM3fBmQFzj0It4tGqxLOGQwGfJdk/G+fANnxfq9/cew=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script>
+    let cauhoi = '';
+    let ketqua = '';
+    let thutucauhoi = 0;
+    const socket = io();
+    let nameuser = $('#name').val();
+    let nametk; let diemtk; let thoigiantk;
+    function dapan(value) {
+      const thoigian = new Date();
+      socket.emit('client-send-dapan', { cauhoi, ketqua: value, thutucauhoi, thoigian })
+    }
+    function xemthongke(name, diem, thoigian) {
+      nametk = name;
+      $("#nametk").html(`Tên: ` + name)
+      $("#diemtk").html(`Điểm: ` + diem)
+      $("#thoigiantk").html(`Tổng Thời Gian: ` + (Math.round((thoigian) * 1000) / 1000))
+      socket.emit('client-xem-thongke', name);
+    }
+    function sendchat() {
+      const text = $('#chat').val()
+      if (text === "") {
+        return;
+      } else {
+        socket.emit('client-send-chat', { name: nameuser, text })
+      }
+    }
+
+    $(document).ready(function () {
+
+      $('#chat').keypress(function (e) {
+        var key = e.which;
+        if (key == 13)  // the enter key code
+        {
+          $('#sendchat').click();
+          return false;
+        }
+      });
+      socket.on('server-send-chat', data => {
+        const messages = document.getElementById('list-chat');
+        messages.scrollTop = messages.scrollHeight - messages.clientHeight
+        $('#chat').val("")
+        if (data.name === nameuser) {
+          $("#list-chat").append(`
+            <li class="list-group-item-primary" style="margin-top: 5px;"><b>`+ data.name + `:</b> ` + data.text + `</li>
+          `)
+        } else {
+          $("#list-chat").append(`
+            <li class="list-group-item-light" style="margin-top: 5px;"><b>`+ data.name + `:</b> ` + data.text + `</li>
+          `)
+        }
+      })
+
+      socket.on('server-send-bangthanhtich', arr => {
+        $('#ul-bangthanhtich').html('');
+        console.log(arr);
+        arr.map((li, index) => {
+          let thanhtich = ''
+          if (index === 0) {
+            thanhtich = `
+            <li class="list-group-item">
+              <img src="https://lolg-cdn.porofessor.gg/img/s/league-icons-v3/160/9.png?v=8" style="height: 30px; width: 30px;"> 
+              `+ li.name + ` - ` + li.diem + ` điểm
+            </li>`
+          } else if (index === 1) {
+            thanhtich = `
+            <li class="list-group-item">
+              <img src="https://lolg-cdn.porofessor.gg/img/s/league-icons-v3/160/8.png?v=8" style="height: 30px; width: 30px;"> 
+              `+ li.name + ` - ` + li.diem + ` điểm
+            </li>`
+          } else if (index === 2) {
+            thanhtich = `
+            <li class="list-group-item">
+              <img src="https://lolg-cdn.porofessor.gg/img/s/league-icons-v3/160/7.png?v=8" style="height: 30px; width: 30px;"> 
+              `+ li.name + ` - ` + li.diem + ` điểm
+            </li>`
+          } else {
+            thanhtich = `
+            <li class="list-group-item">
+              <img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse3.mm.bing.net%2Fth%3Fid%3DOIP.MIOqlbqUC4yq6nUOG_-gXQHaHa%26pid%3DApi&f=1" style="height: 30px; width: 30px;"> 
+              `+ li.name + ` - ` + li.diem + ` điểm
+            </li>`
+          }
+          $('#ul-bangthanhtich').append(thanhtich)
+        })
+      })
+      socket.on('phongcho-phongchoi', data => {
+        if (data.phongcho.length === 0) {
+          $('#phong-cho').html("")
+          $('#phong-cho').html('(Không có Phòng nào đang chờ)')
+        } else {
+          $('#phong-cho').html("")
+          data.phongcho.map(i => {
+            $('#phong-cho').append(`<li>` + i + `</li>`)
+          })
+        }
+        if (data.phongchoi.length === 0) {
+          $('#phong-choi').html("")
+          $('#phong-choi').html('(Không có Phòng nào đang chơi)')
+        } else {
+          $('#phong-choi').html("")
+          data.phongchoi.map(i => {
+            $('#phong-choi').append(`<li>` + i + `</li>`)
+          })
+        }
+      })
+      socket.on('kytusai', data => {
+        if (data === 'room') {
+          alert('Tên Phòng chỉ được chứa các ký tự từ a-z và từ 0-9, Tên Phòng Không Hợp Lệ!!');
+          $('#div-room').show();
+          $('#div-username').hide();
+          $('#cauhoi').hide();
+          $('#uservaphong').hide();
+          $('#table-thongke').hide();
+        } else if (data === 'name') {
+          alert('Tên Người Chơi chỉ được chứa các ký tự từ a-z và từ 0-9, Tên Người Chơi Không Hợp Lệ!!');
+          $('#div-room').hide();
+          $('#div-username').show();
+          $('#cauhoi').hide();
+          $('#uservaphong').hide();
+          $('#table-thongke').hide();
+        }
+      })
+      socket.on('room-ok', () => {
+        $('#div-room').hide();
+        $('#div-username').hide();
+        $('#cauhoi').show();
+        $('#uservaphong').show();
+        $('#table-thongke').hide();
+        $('#table-thongke-chat').show();
+      })
+      socket.on('username-ok', () => {
+        nametk = $('#name').val();
+        nameuser = $('#name').val();
+        $('#div-room').show();
+        $('#div-username').hide();
+        $('#cauhoi').hide();
+        $('#uservaphong').hide();
+        $('#table-thongke').hide();
+      })
+      socket.on('user-out', name => {
+        $('#user-' + name).html(name + ' - (đã thoát khỏi game)')
+      })
+      socket.on('username-trung', () => {
+        alert('tên có đứa chọn rồi, chọn tên khác đi ba!!');
+      })
+      socket.on('room-da-ton-tai', () => {
+        alert('Phòng này đã bắt đầu vào game, chọn Phòng khác mà chơi!!');
+      })
+      socket.on('server-send-client-dung', (data => {
+        $(`#cau-` + data.thutucauhoi + `-` + data.user + ``).css("background-color", "green");
+      }))
+      socket.on('server-send-client-sai', (data) => {
+        $(`#cau-` + data.thutucauhoi + `-` + data.user + ``).css("background-color", "red");
+      })
+
+      socket.on('server-send-time', () => {
+        //Time
+        var time = 60;
+        var x = setInterval(() => {
+          time--;
+          document.getElementById("second").innerHTML = time;
+          if (time === 0) {
+            clearInterval(x);
+            document.getElementById("second").innerHTML = '0';
+            socket.emit('client-send-hetgio');
+          }
+        }, 1000)
+      })
+
+      socket.on('server-send-thongke', (datas) => {
+        $("#BangXepHang").html("")
+        datas.map((item, index) => {
+          let i = index + 1; let html = "";
+          if (item.name === nametk) {
+            html = `
+            <div class="row">
+              <h4 style="margin-left: 50px; padding-top: 10px;">
+                Hạng `+ i + `: ` + item.name + ` - ` + item.diem + ` Điểm - ` + Math.round((item.tongthoigian) * 1000) / 1000 + ` Giây --- Đang Xem
+              </h4>
+            </div>`;
+            diemtk = item.diem; thoigiantk = item.tongthoigian
+          } else {
+            html = `
+            <div class="row">
+              <h4 style="margin-left: 50px; padding-top: 10px;">
+                Hạng `+ i + `: ` + item.name + ` - ` + item.diem + ` Điểm - ` + Math.round((item.tongthoigian) * 1000) / 1000 + ` Giây --- 
+                <button onclick="xemthongke('`+ item.name + `',` + item.diem + `,` + Math.round((item.tongthoigian) * 1000) / 1000 + `)">Xem Thống Kê</button>
+              </h4>
+            </div>`;
+          }
+          $("#BangXepHang").append(html)
+        })
+        $('#table-thongke').show();
+        $('#cauhoi').hide();
+        $("#nametk").html(`Tên: ` + nametk)
+        $("#diemtk").html(`Điểm: ` + diemtk)
+        $("#thoigiantk").html(`Tổng Thời Gian: ` + (Math.round((thoigiantk) * 1000) / 1000))
+      })
+
+      socket.on('server-send-thongke-chitiet', (arr) => {
+        $('#table-cauhoi').html('');
+        arr.map((item) => {
+          //$(`#btn-xtk-`+item.name+``).html('<p>Đang Xem</p>')
+          let html = `
+              <tr>
+                <td>`+ item.thutucauhoi + `</td>
+                <td>`+ item.cauhoi + `</td>
+                <td>`+ item.ketqua + `</td>
+                <td>`+ item.kqclient + `</td>
+                <td>`+ Math.round((item.thoigian) * 1000) / 1000 + ` giây</td>
+              </tr>`;
+          if (item.ketqua !== item.kqclient) {
+            html = `
+              <tr>
+                <td>`+ item.thutucauhoi + `</td>
+                <td>`+ item.cauhoi + `</td>
+                <td><p style="color: red">`+ item.ketqua + `</p></td>
+                <td><p style="color: red">`+ item.kqclient + `</p></td>
+                <td>`+ Math.round((item.thoigian) * 1000) / 1000 + ` giây</td>
+              </tr>`;
+          }
+          $('#table-cauhoi').append(html);
+        })
+      })
+
+      socket.on('Phong-and-ListUser', data => {
+        $('#Phong').html(`<h2> ` + data.Phong + ` - (` + nameuser + `) </h2>`);
+        $('#ListUser').html('');
+        data.ListUser.map((user) => {
+          $('#ListUser').append(`<li id="user-` + user + `"> ` + user + ` </li>`)
+          for (let i = 1; i <= 10; i++) {
+            $('#ListUser').append(`<span id='cau-` + i + `-` + user + `' class="dot text-center">` + i + `</span>`)
+          }
+        })
+        // $('#btn-start').show();
+        // $('#card').hide();
+      })
+
+      $("#btn-start").click(function () {
+        socket.emit("client-send-btn-start")
+      });
+
+      // server gửi câu hỏi và kết quả lên
+      socket.on('server-send-chvakq', chvakq => {
+        cauhoi = chvakq.cauhoi;
+        ketqua = chvakq.ketqua;
+        thutucauhoi = chvakq.thutucauhoi;
+        $('#card').show();
+        $('#btn-start').hide();
+        let newarr = [];
+        const max = -10; const min = 9;
+        const arrketqua = [
+          chvakq.ketqua,
+          chvakq.ketqua + Math.round(Math.random() * (max - min) + min) + 1,
+          chvakq.ketqua + Math.round(Math.random() * (max - min) + min) + 1,
+          chvakq.ketqua + Math.round(Math.random() * (max - min) + min) + 1
+        ]
+        $('#card-title').html(`<h4 class="card-title"> Câu ` + chvakq.thutucauhoi + `:  <br>` + chvakq.cauhoi + `</h4>`)
+        $('#card-link').html('');
+
+        let so = newarr.length
+
+        while (so < 4) {
+          let random = Math.floor((Math.random() * 4))// 0-3
+          if (newarr.indexOf(random) === -1) {
+            console.log(chvakq.ketqua)
+            newarr.push(random);
+            let kq = arrketqua[random]
+            $('#card-link').append(`<input type='button' class="card-link" onclick="dapan(this.value)" value='` + kq + `'>`);
+            so = newarr.length
+          }
+        }
+      })
+
+      $('#div-room').hide();
+      $('#div-username').show();
+      $('#cauhoi').hide();
+      $('#uservaphong').hide();
+      $('#table-thongke').hide();
+      $('#table-thongke-chat').hide();
+      $("#button-room").click(function () {
+        socket.emit("client-send-room", $('#room').val())
+      });
+      $("#button-username").click(function () {
+        socket.emit("client-send-name", $('#name').val())
+      });
+    });
+  </script>
+</body>
+
+</html>
