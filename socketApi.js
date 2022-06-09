@@ -478,6 +478,10 @@ io.on('connection', (socket) => {
         io.in(socket.room).emit('server-send-chat',data);
     })
 
+    socket.on('hack-chat', (name) => {
+        io.in(socket.room).emit('hack-chat',name);
+    })
+
     socket.on('disconnect', () => {
         const temThongKe = ThongKe.filter(i => i.room === socket.room)
         if (temThongKe.length === 0) {

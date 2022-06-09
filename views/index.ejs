@@ -92,7 +92,7 @@
         <h4 class="col col-lg-4" id="diemtk">Tổng Điểm: 9 </h4>
       </div>
     </div>
-    <div id="table-thongke-chat" style="padding-left: 15px; width: 25%; height: 600px; background-color: #bbb;">
+    <div id="table-thongke-chat" style="padding-left: 15px; width: 25%; height: 600px">
       <div class="row" style="height: 200px;">
         <h4 class="text-center" style="margin: auto;">Bảng Thành Tích</h4>
         <br><br>
@@ -104,11 +104,9 @@
       </div>
       <hr>
       <div class="row" style="height: 400px;">
-        <div style="height: 290px;overflow: auto; width: 96%;">
-          <ul class="list-group" id="list-chat">
-          </ul>
-        </div>
-        <div style=" margin-top: 0%; width: 96%;" class="text-center">
+        <ul class="list-group" id="list-chat" style="height: 290px; width: 96%;overflow: auto; ">
+        </ul>
+        <div style="height: 40px; width: 96%;" class="text-center">
           <input id="chat" type="text" style="width: 80%;">
           <button id="sendchat" type="submit" onclick="sendchat()">Send</button>
         </div>
@@ -129,6 +127,7 @@
     const socket = io();
     let nameuser = $('#name').val();
     let nametk; let diemtk; let thoigiantk;
+    const messages = document.getElementById('list-chat');
     function dapan(value) {
       const thoigian = new Date();
       socket.emit('client-send-dapan', { cauhoi, ketqua: value, thutucauhoi, thoigian })
@@ -142,11 +141,39 @@
     }
     function sendchat() {
       const text = $('#chat').val()
-      if (text === "") {
-        return;
+
+      if (isHTML(text)) {
+        socket.emit('hack-chat',nameuser)
       } else {
-        socket.emit('client-send-chat', { name: nameuser, text })
+        if (text === "") {
+          return;
+        } else {
+          socket.emit('client-send-chat', { name: nameuser, text })
+        }
       }
+    }
+    function getMessages(data) {
+      $('#chat').val("")
+      if (data.name === nameuser) {
+        $("#list-chat").append(`
+            <li class="list-group-item-primary" style="margin-top: 5px; margin-left:8px; margin-right:8px"><b>`+ data.name + `:</b> ` + data.text + `</li>
+          `)
+      } else {
+        $("#list-chat").append(`
+            <li class="list-group-item-light" style="margin-top: 5px; margin-left:8px; margin-right:8px"><b>`+ data.name + `:</b> ` + data.text + `</li>
+          `)
+      }
+      messages.scrollTop = messages.scrollHeight;
+    }
+    function isHTML(str) {
+      var a = document.createElement('div');
+      a.innerHTML = str;
+
+      for (var c = a.childNodes, i = c.length; i--;) {
+        if (c[i].nodeType == 1) return true;
+      }
+
+      return false;
     }
 
     $(document).ready(function () {
@@ -160,20 +187,17 @@
         }
       });
       socket.on('server-send-chat', data => {
-        const messages = document.getElementById('list-chat');
-        messages.scrollTop = messages.scrollHeight - messages.clientHeight
-        $('#chat').val("")
-        if (data.name === nameuser) {
-          $("#list-chat").append(`
-            <li class="list-group-item-primary" style="margin-top: 5px;"><b>`+ data.name + `:</b> ` + data.text + `</li>
-          `)
-        } else {
-          $("#list-chat").append(`
-            <li class="list-group-item-light" style="margin-top: 5px;"><b>`+ data.name + `:</b> ` + data.text + `</li>
-          `)
-        }
+        getMessages(data);
       })
 
+      socket.on('hack-chat', (name) => {
+        $("#list-chat").append(`
+            <li class="list-group-item-danger" style="margin-top: 5px; margin-left:8px; margin-right:8px"><b>Admin:</b>
+              ALO ALO, chú ý!!  <br>  Đối tượng có tên là 
+              <b>`+ name + `</b> đang cố hắc trang này bằng cách truyền text dạng HTML 😏 <br> Cay không 😛 </li>
+          `)
+          messages.scrollTop = messages.scrollHeight;
+      })
       socket.on('server-send-bangthanhtich', arr => {
         $('#ul-bangthanhtich').html('');
         console.log(arr);
