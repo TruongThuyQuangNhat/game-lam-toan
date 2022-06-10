@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
   <title>
@@ -18,6 +18,14 @@
       border-radius: 50%;
       display: inline-block;
     }
+    .bigdot {
+      color: white;
+      height: 80px;
+      width: 80px;
+      background-color: rgb(121, 121, 121);
+      border-radius: 50%;
+      display: inline-block;
+    }
   </style>
 </head>
 
@@ -33,13 +41,17 @@
     <hr>
     <div class="form-group">
       <label for="room">Phòng Đang Chờ (Có thể vào chơi):</label>
-      <div id="phong-cho"></div>
+      <div style="overflow: auto;height:150px">
+        <ul class="list-group" id="phong-cho"></ul>
+      </div>
     </div>
     <br>
     <hr>
     <div class="form-group">
       <label for="room">Phòng Đang Chơi (Không thể vào chơi):</label>
-      <div id="phong-choi"></div>
+      <div style="overflow: auto;height:150px">
+        <ul class="list-group" id="phong-choi"></ul>
+      </div>
     </div>
   </div>
 
@@ -52,12 +64,17 @@
   </div>
 
   <div id="content" class="row">
-    <div id="uservaphong" style="width: 25%; height:600px; background-color: rgb(238, 228, 228); overflow: auto;">
+    <div id="uservaphong" style="width: 25%; height:600px; overflow: auto;">
       <h2 id="Phong"> </h2>
-      <ul id="ListUser"> </ul>
+      <div style="overflow: auto;height:550px">
+        <ul id="ListUser"> </ul>
+      </div>
     </div>
-    <div id="cauhoi" style="width: 50%; height: 600px; background-color: rgb(231, 243, 243);">
-      <button id="btn-start">Bắt Đầu</button>
+    <div id="cauhoi" style="width: 50%; height: 600px;">
+      <div class="row">
+        <div style="margin-left: 40%;width: 100px;"><button class="btn btn-primary" id="btn-start">Bắt Đầu</button></div>
+      <div class="bigdot text-center" style="margin-top: 0%;margin-left: 30%;" ><h1 id="second" style="margin-top: 15px;">60</h1></div>
+      </div>
       <div class="card" id="card">
         <div class="card-body">
           <div id="card-title">Có 10 Câu Hỏi, Thời Gian Làm Là 60s, Nhấn Bắt Đầu để gửi câu hỏi đến tất cả những người
@@ -65,11 +82,12 @@
           <div id="card-link"></div>
         </div>
       </div>
-      <div id="second"></div>
     </div>
     <div id="table-thongke" style="width: 50%;">
       <div id="BangXepHang"></div>
       <br>
+      <hr>
+      <div id="btn-choitiep" class="text-center"><button onclick="choitiep()">Chơi Tiếp</button></div>
       <hr>
       <table class="table table-striped text-center">
         <thead>
@@ -127,6 +145,7 @@
     const socket = io();
     let nameuser = $('#name').val();
     let nametk; let diemtk; let thoigiantk;
+    let temp = 0;
     const messages = document.getElementById('list-chat');
     function dapan(value) {
       const thoigian = new Date();
@@ -143,7 +162,7 @@
       const text = $('#chat').val()
 
       if (isHTML(text)) {
-        socket.emit('hack-chat',nameuser)
+        socket.emit('hack-chat', nameuser)
       } else {
         if (text === "") {
           return;
@@ -175,6 +194,12 @@
 
       return false;
     }
+    function choitiep() {
+      socket.emit('client-send-choitiep')
+    }
+    function chonphong(name) {
+      $('#room').val(name)
+    }
 
     $(document).ready(function () {
 
@@ -189,14 +214,18 @@
       socket.on('server-send-chat', data => {
         getMessages(data);
       })
-
+      socket.on('server-send-choitiep', () => {
+        $('#ul-bangthanhtich').html("");
+        $('#table-thongke').hide();
+        $('#cauhoi').show();
+      })
       socket.on('hack-chat', (name) => {
         $("#list-chat").append(`
             <li class="list-group-item-danger" style="margin-top: 5px; margin-left:8px; margin-right:8px"><b>Admin:</b>
               ALO ALO, chú ý!!  <br>  Đối tượng có tên là 
               <b>`+ name + `</b> đang cố hắc trang này bằng cách truyền text dạng HTML 😏 <br> Cay không 😛 </li>
           `)
-          messages.scrollTop = messages.scrollHeight;
+        messages.scrollTop = messages.scrollHeight;
       })
       socket.on('server-send-bangthanhtich', arr => {
         $('#ul-bangthanhtich').html('');
@@ -238,7 +267,7 @@
         } else {
           $('#phong-cho').html("")
           data.phongcho.map(i => {
-            $('#phong-cho').append(`<li>` + i + `</li>`)
+            $('#phong-cho').append(`<button class="list-group-item" onclick='chonphong("` + i + `")'>` + i + `</button>`)
           })
         }
         if (data.phongchoi.length === 0) {
@@ -247,7 +276,7 @@
         } else {
           $('#phong-choi').html("")
           data.phongchoi.map(i => {
-            $('#phong-choi').append(`<li>` + i + `</li>`)
+            $('#phong-choi').append(`<li class="list-group-item">` + i + `</li>`)
           })
         }
       })
@@ -303,38 +332,107 @@
 
       socket.on('server-send-time', () => {
         //Time
-        var time = 60;
-        var x = setInterval(() => {
-          time--;
+        let time = 59;
+        const x = setInterval(() => {
           document.getElementById("second").innerHTML = time;
+          if (temp === 11) {
+            clearInterval(x);
+            document.getElementById("second").innerHTML = '0';
+          }
           if (time === 0) {
+            //$('#btn-choitiep').show()
             clearInterval(x);
             document.getElementById("second").innerHTML = '0';
             socket.emit('client-send-hetgio');
           }
+          time--;
         }, 1000)
       })
-
+      socket.on('show-choi-tiep', () => {
+        $('#btn-choitiep').show()
+      })
       socket.on('server-send-thongke', (datas) => {
+        temp = 11;
+        //clearInterval(x);
+        // document.getElementById("second").innerHTML = '0';
         $("#BangXepHang").html("")
         datas.map((item, index) => {
           let i = index + 1; let html = "";
           if (item.name === nametk) {
-            html = `
-            <div class="row">
-              <h4 style="margin-left: 50px; padding-top: 10px;">
-                Hạng `+ i + `: ` + item.name + ` - ` + item.diem + ` Điểm - ` + Math.round((item.tongthoigian) * 1000) / 1000 + ` Giây --- Đang Xem
-              </h4>
-            </div>`;
+            if (index === 0) {
+              html = `
+                <div class="row">
+                  <h4 style="margin-left: 50px; padding-top: 10px;">
+                    <img src="https://lolg-cdn.porofessor.gg/img/s/league-icons-v3/160/9.png?v=8" style="height: 50px; width: 50px;">
+                    Hạng `+ i + `: ` + item.name + ` - ` + item.diem + ` Điểm - ` + Math.round((item.tongthoigian) * 1000) / 1000 + ` Giây --- Đang Xem
+                  </h4>
+                </div>`;
+            } else if(index === 1){
+              html = `
+                <div class="row">
+                  <h4 style="margin-left: 50px; padding-top: 10px;">
+                    <img src="https://lolg-cdn.porofessor.gg/img/s/league-icons-v3/160/8.png?v=8" style="height: 50px; width: 50px;">
+                    Hạng `+ i + `: ` + item.name + ` - ` + item.diem + ` Điểm - ` + Math.round((item.tongthoigian) * 1000) / 1000 + ` Giây --- Đang Xem
+                  </h4>
+                </div>`;
+            } else if(index === 2){
+              html = `
+                <div class="row">
+                  <h4 style="margin-left: 50px; padding-top: 10px;">
+                    <img src="https://lolg-cdn.porofessor.gg/img/s/league-icons-v3/160/7.png?v=8" style="height: 50px; width: 50px;">
+                    Hạng `+ i + `: ` + item.name + ` - ` + item.diem + ` Điểm - ` + Math.round((item.tongthoigian) * 1000) / 1000 + ` Giây --- Đang Xem
+                  </h4>
+                </div>`;
+            } else {
+              html = `
+                <div class="row">
+                  <h4 style="margin-left: 50px; padding-top: 10px;">
+                    <img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse3.mm.bing.net%2Fth%3Fid%3DOIP.MIOqlbqUC4yq6nUOG_-gXQHaHa%26pid%3DApi&f=1" style="height: 50px; width: 50px;"> 
+                    Hạng `+ i + `: ` + item.name + ` - ` + item.diem + ` Điểm - ` + Math.round((item.tongthoigian) * 1000) / 1000 + ` Giây --- Đang Xem
+                  </h4>
+                </div>`;
+            }
+
             diemtk = item.diem; thoigiantk = item.tongthoigian
           } else {
-            html = `
-            <div class="row">
-              <h4 style="margin-left: 50px; padding-top: 10px;">
-                Hạng `+ i + `: ` + item.name + ` - ` + item.diem + ` Điểm - ` + Math.round((item.tongthoigian) * 1000) / 1000 + ` Giây --- 
-                <button onclick="xemthongke('`+ item.name + `',` + item.diem + `,` + Math.round((item.tongthoigian) * 1000) / 1000 + `)">Xem Thống Kê</button>
-              </h4>
-            </div>`;
+
+            if (index === 0) {
+              html = `
+                <div class="row">
+                  <h5 style="margin-left: 50px; padding-top: 10px;">
+                    <img src="https://lolg-cdn.porofessor.gg/img/s/league-icons-v3/160/9.png?v=8" style="height: 50px; width: 50px;">
+                    Hạng `+ i + `: ` + item.name + ` - ` + item.diem + ` Điểm - ` + Math.round((item.tongthoigian) * 1000) / 1000 + ` Giây --- 
+                    <button onclick="xemthongke('`+ item.name + `',` + item.diem + `,` + Math.round((item.tongthoigian) * 1000) / 1000 + `)">Xem Thống Kê</button>
+                  </h5>
+                </div>`;
+            } else if(index === 1){
+              html = `
+                <div class="row">
+                  <h5 style="margin-left: 50px; padding-top: 10px;">
+                    <img src="https://lolg-cdn.porofessor.gg/img/s/league-icons-v3/160/8.png?v=8" style="height: 50px; width: 50px;">
+                    Hạng `+ i + `: ` + item.name + ` - ` + item.diem + ` Điểm - ` + Math.round((item.tongthoigian) * 1000) / 1000 + ` Giây --- 
+                    <button onclick="xemthongke('`+ item.name + `',` + item.diem + `,` + Math.round((item.tongthoigian) * 1000) / 1000 + `)">Xem Thống Kê</button>
+                  </h5>
+                </div>`;
+            } else if(index === 2){
+              html = `
+                <div class="row">
+                  <h5 style="margin-left: 50px; padding-top: 10px;">
+                    <img src="https://lolg-cdn.porofessor.gg/img/s/league-icons-v3/160/7.png?v=8" style="height: 50px; width: 50px;">
+                    Hạng `+ i + `: ` + item.name + ` - ` + item.diem + ` Điểm - ` + Math.round((item.tongthoigian) * 1000) / 1000 + ` Giây --- 
+                    <button onclick="xemthongke('`+ item.name + `',` + item.diem + `,` + Math.round((item.tongthoigian) * 1000) / 1000 + `)">Xem Thống Kê</button>
+                  </h5>
+                </div>`;
+            } else {
+              html = `
+                <div class="row">
+                  <h5 style="margin-left: 50px; padding-top: 10px;">
+                    <img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse3.mm.bing.net%2Fth%3Fid%3DOIP.MIOqlbqUC4yq6nUOG_-gXQHaHa%26pid%3DApi&f=1" style="height: 50px; width: 50px;"> 
+                    Hạng `+ i + `: ` + item.name + ` - ` + item.diem + ` Điểm - ` + Math.round((item.tongthoigian) * 1000) / 1000 + ` Giây --- 
+                    <button onclick="xemthongke('`+ item.name + `',` + item.diem + `,` + Math.round((item.tongthoigian) * 1000) / 1000 + `)">Xem Thống Kê</button>
+                  </h5>
+                </div>`;
+            }
           }
           $("#BangXepHang").append(html)
         })
@@ -375,9 +473,9 @@
         $('#Phong').html(`<h2> ` + data.Phong + ` - (` + nameuser + `) </h2>`);
         $('#ListUser').html('');
         data.ListUser.map((user) => {
-          $('#ListUser').append(`<li id="user-` + user + `"> ` + user + ` </li>`)
+          $('#ListUser').append(`<hr><li id="user-` + user + `">` + user + `</li>`)
           for (let i = 1; i <= 10; i++) {
-            $('#ListUser').append(`<span id='cau-` + i + `-` + user + `' class="dot text-center">` + i + `</span>`)
+            $('#ListUser').append(`<span style="color: white" id='cau-` + i + `-` + user + `' class="dot text-center">` + i + `</span>`)
           }
         })
         // $('#btn-start').show();
@@ -390,6 +488,7 @@
 
       // server gửi câu hỏi và kết quả lên
       socket.on('server-send-chvakq', chvakq => {
+        temp = 0;
         cauhoi = chvakq.cauhoi;
         ketqua = chvakq.ketqua;
         thutucauhoi = chvakq.thutucauhoi;
@@ -403,7 +502,7 @@
           chvakq.ketqua + Math.round(Math.random() * (max - min) + min) + 1,
           chvakq.ketqua + Math.round(Math.random() * (max - min) + min) + 1
         ]
-        $('#card-title').html(`<h4 class="card-title"> Câu ` + chvakq.thutucauhoi + `:  <br>` + chvakq.cauhoi + `</h4>`)
+        $('#card-title').html(`<h3 class="card-title"> Câu ` + chvakq.thutucauhoi + `:  <br>` + chvakq.cauhoi + `</h3>`)
         $('#card-link').html('');
 
         let so = newarr.length
@@ -414,12 +513,12 @@
             console.log(chvakq.ketqua)
             newarr.push(random);
             let kq = arrketqua[random]
-            $('#card-link').append(`<input type='button' class="card-link" onclick="dapan(this.value)" value='` + kq + `'>`);
+            $('#card-link').append(`<input style="margin-right: 20px" class="btn btn-primary btn-lg" type='button' class="card-link" onclick="dapan(this.value)" value='` + kq + `'>`);
             so = newarr.length
           }
         }
       })
-
+      $('#btn-choitiep').hide()
       $('#div-room').hide();
       $('#div-username').show();
       $('#cauhoi').hide();
