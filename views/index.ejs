@@ -64,9 +64,9 @@
   </div>
 
   <div id="content" class="row">
-    <div id="uservaphong" style="width: 25%; height:600px; overflow: auto;">
+    <div id="uservaphong" style="width: 25%; height:600px;">
       <h2 id="Phong"> </h2>
-      <div style="overflow: auto;height:550px">
+      <div style="overflow: auto;height:550px; background-color: rgb(221, 221, 221);">
         <ul id="ListUser"> </ul>
       </div>
     </div>
@@ -87,7 +87,9 @@
       <div id="BangXepHang"></div>
       <br>
       <hr>
-      <div id="btn-choitiep" class="text-center"><button onclick="choitiep()">Chơi Tiếp</button></div>
+      <div id="btn-choitiep" class="text-center" style="margin-left: 40%;width: 100px;">
+        <button class="btn btn-primary" onclick="choitiep()">Chơi Tiếp</button>
+      </div>
       <hr>
       <table class="table table-striped text-center">
         <thead>
@@ -111,7 +113,7 @@
       </div>
     </div>
     <div id="table-thongke-chat" style="padding-left: 15px; width: 25%; height: 600px">
-      <div class="row" style="height: 200px;">
+      <div class="row" style="height: 200px; background-color: rgb(221, 221, 221);">
         <h4 class="text-center" style="margin: auto;">Bảng Thành Tích</h4>
         <br><br>
         <div style=" overflow: auto; height: 165px; width: 96%;">
@@ -121,12 +123,12 @@
 
       </div>
       <hr>
-      <div class="row" style="height: 400px;">
+      <div class="row" style="height: 400px; background-color: rgb(221, 221, 221);">
         <ul class="list-group" id="list-chat" style="height: 290px; width: 96%;overflow: auto; ">
         </ul>
         <div style="height: 40px; width: 96%;" class="text-center">
           <input id="chat" type="text" style="width: 80%;">
-          <button id="sendchat" type="submit" onclick="sendchat()">Send</button>
+          <button id="sendchat" type="submit" onclick="sendchat()">Enter</button>
         </div>
       </div>
     </div>
@@ -229,7 +231,6 @@
       })
       socket.on('server-send-bangthanhtich', arr => {
         $('#ul-bangthanhtich').html('');
-        console.log(arr);
         arr.map((li, index) => {
           let thanhtich = ''
           if (index === 0) {
@@ -340,16 +341,12 @@
             document.getElementById("second").innerHTML = '0';
           }
           if (time === 0) {
-            //$('#btn-choitiep').show()
             clearInterval(x);
             document.getElementById("second").innerHTML = '0';
             socket.emit('client-send-hetgio');
           }
           time--;
         }, 1000)
-      })
-      socket.on('show-choi-tiep', () => {
-        $('#btn-choitiep').show()
       })
       socket.on('server-send-thongke', (datas) => {
         temp = 11;
@@ -362,34 +359,34 @@
             if (index === 0) {
               html = `
                 <div class="row">
-                  <h4 style="margin-left: 50px; padding-top: 10px;">
+                  <p style="margin-left: 50px; padding-top: 10px;">
                     <img src="https://lolg-cdn.porofessor.gg/img/s/league-icons-v3/160/9.png?v=8" style="height: 50px; width: 50px;">
-                    Hạng `+ i + `: ` + item.name + ` - ` + item.diem + ` Điểm - ` + Math.round((item.tongthoigian) * 1000) / 1000 + ` Giây --- Đang Xem
-                  </h4>
+                    <b>Người thách đấu	: ` + item.name + ` - ` + item.diem + ` Điểm - ` + Math.round((item.tongthoigian) * 1000) / 1000 + ` Giây --- Đang Xem</b>
+                  </p>
                 </div>`;
             } else if(index === 1){
               html = `
                 <div class="row">
-                  <h4 style="margin-left: 50px; padding-top: 10px;">
+                  <p style="margin-left: 50px; padding-top: 10px;">
                     <img src="https://lolg-cdn.porofessor.gg/img/s/league-icons-v3/160/8.png?v=8" style="height: 50px; width: 50px;">
-                    Hạng `+ i + `: ` + item.name + ` - ` + item.diem + ` Điểm - ` + Math.round((item.tongthoigian) * 1000) / 1000 + ` Giây --- Đang Xem
-                  </h4>
+                    <b>GrandMaster : ` + item.name + ` - ` + item.diem + ` Điểm - ` + Math.round((item.tongthoigian) * 1000) / 1000 + ` Giây --- Đang Xem</b>
+                  </p>
                 </div>`;
             } else if(index === 2){
               html = `
                 <div class="row">
-                  <h4 style="margin-left: 50px; padding-top: 10px;">
+                  <p style="margin-left: 50px; padding-top: 10px;">
                     <img src="https://lolg-cdn.porofessor.gg/img/s/league-icons-v3/160/7.png?v=8" style="height: 50px; width: 50px;">
-                    Hạng `+ i + `: ` + item.name + ` - ` + item.diem + ` Điểm - ` + Math.round((item.tongthoigian) * 1000) / 1000 + ` Giây --- Đang Xem
-                  </h4>
+                    <b>Cao thủ : ` + item.name + ` - ` + item.diem + ` Điểm - ` + Math.round((item.tongthoigian) * 1000) / 1000 + ` Giây --- Đang Xem</b>
+                  </p>
                 </div>`;
             } else {
               html = `
                 <div class="row">
-                  <h4 style="margin-left: 50px; padding-top: 10px;">
+                  <p style="margin-left: 50px; padding-top: 10px;">
                     <img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse3.mm.bing.net%2Fth%3Fid%3DOIP.MIOqlbqUC4yq6nUOG_-gXQHaHa%26pid%3DApi&f=1" style="height: 50px; width: 50px;"> 
-                    Hạng `+ i + `: ` + item.name + ` - ` + item.diem + ` Điểm - ` + Math.round((item.tongthoigian) * 1000) / 1000 + ` Giây --- Đang Xem
-                  </h4>
+                    <b>Hạng `+ i + `: ` + item.name + ` - ` + item.diem + ` Điểm - ` + Math.round((item.tongthoigian) * 1000) / 1000 + ` Giây --- Đang Xem</b>
+                  </p>
                 </div>`;
             }
 
@@ -399,38 +396,38 @@
             if (index === 0) {
               html = `
                 <div class="row">
-                  <h5 style="margin-left: 50px; padding-top: 10px;">
+                  <p style="margin-left: 50px; padding-top: 10px;">
                     <img src="https://lolg-cdn.porofessor.gg/img/s/league-icons-v3/160/9.png?v=8" style="height: 50px; width: 50px;">
-                    Hạng `+ i + `: ` + item.name + ` - ` + item.diem + ` Điểm - ` + Math.round((item.tongthoigian) * 1000) / 1000 + ` Giây --- 
+                    Người thách đấu	: ` + item.name + ` - ` + item.diem + ` Điểm - ` + Math.round((item.tongthoigian) * 1000) / 1000 + ` Giây --- 
                     <button onclick="xemthongke('`+ item.name + `',` + item.diem + `,` + Math.round((item.tongthoigian) * 1000) / 1000 + `)">Xem Thống Kê</button>
-                  </h5>
+                  </p>
                 </div>`;
             } else if(index === 1){
               html = `
                 <div class="row">
-                  <h5 style="margin-left: 50px; padding-top: 10px;">
+                  <p style="margin-left: 50px; padding-top: 10px;">
                     <img src="https://lolg-cdn.porofessor.gg/img/s/league-icons-v3/160/8.png?v=8" style="height: 50px; width: 50px;">
-                    Hạng `+ i + `: ` + item.name + ` - ` + item.diem + ` Điểm - ` + Math.round((item.tongthoigian) * 1000) / 1000 + ` Giây --- 
+                    GrandMaster : ` + item.name + ` - ` + item.diem + ` Điểm - ` + Math.round((item.tongthoigian) * 1000) / 1000 + ` Giây --- 
                     <button onclick="xemthongke('`+ item.name + `',` + item.diem + `,` + Math.round((item.tongthoigian) * 1000) / 1000 + `)">Xem Thống Kê</button>
-                  </h5>
+                  </p>
                 </div>`;
             } else if(index === 2){
               html = `
                 <div class="row">
-                  <h5 style="margin-left: 50px; padding-top: 10px;">
+                  <p style="margin-left: 50px; padding-top: 10px;">
                     <img src="https://lolg-cdn.porofessor.gg/img/s/league-icons-v3/160/7.png?v=8" style="height: 50px; width: 50px;">
-                    Hạng `+ i + `: ` + item.name + ` - ` + item.diem + ` Điểm - ` + Math.round((item.tongthoigian) * 1000) / 1000 + ` Giây --- 
+                    Cao thủ : ` + item.name + ` - ` + item.diem + ` Điểm - ` + Math.round((item.tongthoigian) * 1000) / 1000 + ` Giây --- 
                     <button onclick="xemthongke('`+ item.name + `',` + item.diem + `,` + Math.round((item.tongthoigian) * 1000) / 1000 + `)">Xem Thống Kê</button>
-                  </h5>
+                  </p>
                 </div>`;
             } else {
               html = `
                 <div class="row">
-                  <h5 style="margin-left: 50px; padding-top: 10px;">
+                  <p style="margin-left: 50px; padding-top: 10px;">
                     <img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse3.mm.bing.net%2Fth%3Fid%3DOIP.MIOqlbqUC4yq6nUOG_-gXQHaHa%26pid%3DApi&f=1" style="height: 50px; width: 50px;"> 
                     Hạng `+ i + `: ` + item.name + ` - ` + item.diem + ` Điểm - ` + Math.round((item.tongthoigian) * 1000) / 1000 + ` Giây --- 
                     <button onclick="xemthongke('`+ item.name + `',` + item.diem + `,` + Math.round((item.tongthoigian) * 1000) / 1000 + `)">Xem Thống Kê</button>
-                  </h5>
+                  </p>
                 </div>`;
             }
           }
@@ -510,7 +507,6 @@
         while (so < 4) {
           let random = Math.floor((Math.random() * 4))// 0-3
           if (newarr.indexOf(random) === -1) {
-            console.log(chvakq.ketqua)
             newarr.push(random);
             let kq = arrketqua[random]
             $('#card-link').append(`<input style="margin-right: 20px" class="btn btn-primary btn-lg" type='button' class="card-link" onclick="dapan(this.value)" value='` + kq + `'>`);
@@ -518,7 +514,6 @@
           }
         }
       })
-      $('#btn-choitiep').hide()
       $('#div-room').hide();
       $('#div-username').show();
       $('#cauhoi').hide();

@@ -100,6 +100,7 @@ function CHvaKQ(room) {
     return result;
 }
 function KhongCoKyTuDacBiet(string) {
+    string = string.toLowerCase();
     const arr = [...string]
     for (let i = 0; i < arr.length; i++) {
         if (!KyTuChoPhep.includes(arr[i])) {
@@ -110,13 +111,11 @@ function KhongCoKyTuDacBiet(string) {
 }
 
 io.on('connection', (socket) => {
-    console.log('user connection: ', socket.id);
 
     socket.on('client-send-choitiep', () => {
         //Xóa các dữ liệu cũ có trùng room
         CauHoivaKetQua = CauHoivaKetQua.filter(i => i.room !== socket.room)
         Database = Database.filter(i => i.room !== socket.room)
-        console.log('truoc', DaLamXong10Cau);
         const arrName = [] // chứa các name ở trong room
         ThongKe.map(i => {
             if (i.room === socket.room && DaLamXong10Cau.includes(i.name)) {
@@ -124,7 +123,6 @@ io.on('connection', (socket) => {
             }
         })
         DaLamXong10Cau = DaLamXong10Cau.filter(i => !arrName.includes(i))
-        console.log('sau', DaLamXong10Cau);
         ThongKe = ThongKe.filter(i => i.room !== socket.room)
         ThoiGianBatDau = ThoiGianBatDau.filter(i => i.room !== socket.room)
 
@@ -425,7 +423,6 @@ io.on('connection', (socket) => {
             // }
             // ThongKe.push(data);
             DaLamXong10Cau.push(socket.username);
-            console.log('DaLamXong10Cau', DaLamXong10Cau);
             let newThongKe = ThongKe.filter((i) => { return i.room === socket.room })
             newThongKe = newThongKe.filter(i => DaLamXong10Cau.includes(i.name))
             newThongKe.sort((a, b) => b.diem - a.diem)
@@ -441,31 +438,6 @@ io.on('connection', (socket) => {
             socket.emit('server-send-thongke-chitiet', arr)
         }
 
-        // kiểm tra xem tất cả user trong mảng đã làm xong hết chưa, nếu rồi thì hiện (Chơi Tiếp)
-        const ThongKeMoi = ThongKe.filter((i) => { return i.room === socket.room })
-        const xong10cau = ThongKeMoi.filter(i => DaLamXong10Cau.includes(i.name)) // list user đã làm xong 10 câu
-        const hetgio = ThongKeMoi.filter((i) => { return i.tongthoigian === 60 }) // list user làm hết thời gian
-        const allUser = []; // chứa [name]
-        ThongKeMoi.map(i => {
-            allUser.push(i.name);
-        })
-        const doneUser = [] // [name]
-        xong10cau.map(i => {
-            if (!doneUser.includes(i.name)) {
-                doneUser.push(i.name)
-            }
-        })
-        hetgio.map(i => {
-            if (!doneUser.includes(i.name)) {
-                doneUser.push(i.name)
-            }
-        })
-        const areEqual = allUser.length === doneUser.length && allUser.every(item => doneUser.indexOf(item) > -1);
-        if (areEqual) {
-            ThongKeMoi.map(i => {
-                io.in(i.id).emit('show-choi-tiep')
-            })
-        }
     })
 
     socket.on('client-xem-thongke', (name) => {
@@ -547,33 +519,6 @@ io.on('connection', (socket) => {
         })
         arr.sort((a, b) => a.thutucauhoi - b.thutucauhoi)
         socket.emit('server-send-thongke-chitiet', arr)
-
-
-        // kiểm tra xem tất cả user trong mảng đã làm xong hết chưa, nếu rồi thì hiện (Chơi Tiếp)
-        const ThongKeMoi = ThongKe.filter((i) => { return i.room === socket.room })
-        const xong10cau = ThongKeMoi.filter(i => DaLamXong10Cau.includes(i.name)) // list user đã làm xong 10 câu
-        const hetgio = ThongKeMoi.filter((i) => { return i.tongthoigian === 60 }) // list user làm hết thời gian
-        const allUser = []; // chứa [name]
-        ThongKeMoi.map(i => {
-            allUser.push(i.name);
-        })
-        const doneUser = [] // [name]
-        xong10cau.map(i => {
-            if (!doneUser.includes(i.name)) {
-                doneUser.push(i.name)
-            }
-        })
-        hetgio.map(i => {
-            if (!doneUser.includes(i.name)) {
-                doneUser.push(i.name)
-            }
-        })
-        const areEqual = allUser.length === doneUser.length && allUser.every(item => doneUser.indexOf(item) > -1);
-        if (areEqual) {
-            ThongKeMoi.map(i => {
-                io.in(i.id).emit('show-choi-tiep')
-            })
-        }
     })
 
     socket.on('client-send-chat', data => {
@@ -632,7 +577,6 @@ io.on('connection', (socket) => {
         // console.log(data);
         // ThongKe.push(data);
 
-        console.log('user disconnect: ', socket.id);
 
         const arr = ListUserNameandRoom.filter((l) => {
             return l.room === socket.room
